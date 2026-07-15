@@ -1,0 +1,137 @@
+name: Version Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+      release_notes:
+        description: 'Release notes / changelog'
+        required: false
+        default: 'Bug fixes and improvements.'
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Read current version
+        id: current
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+
+      - name: Calculate new version
+        id: new_version
+        run: |
+          CURRENT="${{ steps.current.outputs.version }}"
+          IFS='.' read -r -a parts <<< "$CURRENT"
+          MAJOR=${parts[0]}
+          MINOR=${parts[1]}
+          PATCH=${parts[2]}
+
+          case "${{ github.event.inputs.bump_type }}" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Bump version in package.json
+        run: |
+          NEW_VER="${{ steps.new_version.outputs.version }}"
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '$NEW_VER';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          echo "Updated package.json to $NEW_VER"
+
+      - name: Bump version in tauri.conf.json
+        run: |
+          NEW_VER="${{ steps.new_version.outputs.version }}"
+          node -e "
+            const fs = require('fs');
+            const conf = JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json', 'utf8'));
+            conf.version = '$NEW_VER';
+            fs.writeFileSync('src-tauri/tauri.conf.json', JSON.stringify(conf, null, 2) + '\n');
+          "
+          echo "Updated tauri.conf.json to $NEW_VER"
+
+      - name: Bump version in Cargo.toml
+        run: |
+          NEW_VER="${{ steps.new_version.outputs.version }}"
+          sed -i "s/^version = \".*\"/version = \"$NEW_VER\"/" src-tauri/Cargo.toml
+          echo "Updated Cargo.toml to $NEW_VER"
+
+      - name: Update updater.json
+        run: |
+          NEW_VER="${{ steps.new_version.outputs.version }}"
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          node -e "
+            const fs = require('fs');
+            const u = JSON.parse(fs.readFileSync('updater.json', 'utf8'));
+            u.version = '$NEW_VER';
+            u.notes = \`${{ github.event.inputs.release_notes }}\`;
+            u.pub_date = '$NOW';
+            fs.writeFileSync('updater.json', JSON.stringify(u, null, 2) + '\n');
+          "
+          echo "Updated updater.json to $NEW_VER"
+
+      - name: Commit version bump
+        run: |
+          NEW_VER="${{ steps.new_version.outputs.version }}"
+          git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml updater.json
+          git commit -m "chore: bump version to v$NEW_VER [skip ci]"
+          git push origin main
+
+      - name: Create Git tag
+        run: |
+          NEW_VER="${{ steps.new_version.outputs.version }}"
+          git tag "v$NEW_VER"
+          git push origin "v$NEW_VER"
+          echo "Created and pushed tag v$NEW_VER"
+
+      - name: Summary
+        run: |
+          echo "✅ Version bumped from v${{ steps.current.outputs.version }} → v${{ steps.new_version.outputs.version }}"
+          echo "🏷️  Tag v${{ steps.new_version.outputs.version }} created — Release Build workflow will now trigger automatically!"
