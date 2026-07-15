@@ -206,7 +206,7 @@ function App() {
       <div className="bg-gradient-orb orb-1"></div>
       <div className="bg-gradient-orb orb-2"></div>
       <div className="bg-grid-overlay"></div>
-
+      {/* hello */}
       {/* Global Theme Controls */}
       <ThemeControls />
 
