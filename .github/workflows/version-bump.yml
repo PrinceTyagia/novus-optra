@@ -75,63 +75,74 @@ jobs:
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "New version: $NEW_VERSION"
 
-      - name: Bump version in package.json
+      - name: Bump version in all config files
+        env:
+          NEW_VER: ${{ steps.new_version.outputs.version }}
+          RELEASE_NOTES: ${{ github.event.inputs.release_notes }}
         run: |
-          NEW_VER="${{ steps.new_version.outputs.version }}"
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          # Update package.json
           node -e "
             const fs = require('fs');
             const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            pkg.version = '$NEW_VER';
+            pkg.version = process.env.NEW_VER;
             fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('Updated package.json to ' + process.env.NEW_VER);
           "
-          echo "Updated package.json to $NEW_VER"
 
-      - name: Bump version in tauri.conf.json
-        run: |
-          NEW_VER="${{ steps.new_version.outputs.version }}"
+          # Update tauri.conf.json
           node -e "
             const fs = require('fs');
             const conf = JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json', 'utf8'));
-            conf.version = '$NEW_VER';
+            conf.version = process.env.NEW_VER;
             fs.writeFileSync('src-tauri/tauri.conf.json', JSON.stringify(conf, null, 2) + '\n');
+            console.log('Updated tauri.conf.json to ' + process.env.NEW_VER);
           "
-          echo "Updated tauri.conf.json to $NEW_VER"
 
-      - name: Bump version in Cargo.toml
-        run: |
-          NEW_VER="${{ steps.new_version.outputs.version }}"
-          sed -i "s/^version = \".*\"/version = \"$NEW_VER\"/" src-tauri/Cargo.toml
+          # Update Cargo.toml (only the [package] version line at the top)
+          sed -i "0,/^version = \".*\"/s/^version = \".*\"/version = \"$NEW_VER\"/" src-tauri/Cargo.toml
           echo "Updated Cargo.toml to $NEW_VER"
 
-      - name: Update updater.json
-        run: |
-          NEW_VER="${{ steps.new_version.outputs.version }}"
-          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          # Update updater.json using env vars (safe from injection)
           node -e "
             const fs = require('fs');
             const u = JSON.parse(fs.readFileSync('updater.json', 'utf8'));
-            u.version = '$NEW_VER';
-            u.notes = \`${{ github.event.inputs.release_notes }}\`;
+            u.version = process.env.NEW_VER;
+            u.notes = process.env.RELEASE_NOTES;
             u.pub_date = '$NOW';
+            // Update download URLs
+            for (const platform of Object.keys(u.platforms)) {
+              u.platforms[platform].url = u.platforms[platform].url.replace(/\/v[^/]+\//, '/v' + process.env.NEW_VER + '/');
+            }
             fs.writeFileSync('updater.json', JSON.stringify(u, null, 2) + '\n');
+            console.log('Updated updater.json to ' + process.env.NEW_VER);
           "
-          echo "Updated updater.json to $NEW_VER"
 
       - name: Commit version bump
+        env:
+          NEW_VER: ${{ steps.new_version.outputs.version }}
         run: |
-          NEW_VER="${{ steps.new_version.outputs.version }}"
           git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml updater.json
-          git commit -m "chore: bump version to v$NEW_VER [skip ci]"
+          git commit -m "chore: bump version to v${NEW_VER} [skip ci]"
           git push origin main
+          echo "Committed version bump to main"
 
-      - name: Create Git tag
+      - name: Create and push Git tag
+        env:
+          NEW_VER: ${{ steps.new_version.outputs.version }}
         run: |
-          NEW_VER="${{ steps.new_version.outputs.version }}"
-          git tag "v$NEW_VER"
-          git push origin "v$NEW_VER"
-          echo "Created and pushed tag v$NEW_VER"
+          git tag "v${NEW_VER}"
+          git push origin "v${NEW_VER}"
+          echo "Created and pushed tag v${NEW_VER}"
 
-      - name: Summary
+      - name: Job summary
         run: |
-          echo "✅ Version bumped from v${{ steps.current.outputs.version }} → v${{ steps.new_version.outputs.version }}"
-          echo "🏷️  Tag v${{ steps.new_version.outputs.version }} created — Release Build workflow will now trigger automatically!"
+          echo "## ✅ Version Bumped" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Previous | v${{ steps.current.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| New | v${{ steps.new_version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Type | ${{ github.event.inputs.bump_type }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🏷️ Tag **v${{ steps.new_version.outputs.version }}** created → **Release Build** workflow will trigger automatically!"  >> $GITHUB_STEP_SUMMARY
