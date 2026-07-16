@@ -253,7 +253,7 @@ function App() {
           </form>
 
           <div className="logon-footer-ver">
-            NovusOptra terminal v0.1.0
+            NovusOptra terminal v0.1.3
           </div>
         </div>
       ) : (
@@ -274,7 +274,7 @@ function App() {
               </svg>
               <div className="header-title-container">
                 <span className="header-title">Novus Optra</span>
-                <span className="header-version">v0.1.0</span>
+                <span className="header-version">v0.1.3</span>
               </div>
             </div>
 
