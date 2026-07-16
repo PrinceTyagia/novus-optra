@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getVersion } from "@tauri-apps/api/app";
 import { ThemeControls } from "./components/ThemeControls";
 import "./App.css";
 
@@ -13,6 +14,13 @@ function App() {
   const [memoryUsage, setMemoryUsage] = useState(42.8);
   const [latency, setLatency] = useState(0.4);
   const [windowLabel, setWindowLabel] = useState<string | null>(null);
+  const [appVersion, setAppVersion] = useState("0.1.3");
+
+  useEffect(() => {
+    getVersion().then(setAppVersion).catch((err) => {
+      console.warn("Could not retrieve app version:", err);
+    });
+  }, []);
 
   // Authentication states
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -143,6 +151,13 @@ function App() {
     }
 
     // Otherwise, we are in the splashscreen window.
+    const splashVersion = document.getElementById("splash-version");
+    if (splashVersion) {
+      getVersion().then((v) => {
+        splashVersion.textContent = `Platform v${v}`;
+      }).catch((e) => console.warn(e));
+    }
+
     const bar = document.getElementById("loader-bar");
     const statusText = document.getElementById("loader-status-text");
     const percentText = document.getElementById("loader-percent");
@@ -250,7 +265,7 @@ function App() {
           </form>
 
           <div className="logon-footer-ver">
-            NovusOptra terminal v0.1.3
+            NovusOptra terminal v{appVersion}
           </div>
         </div>
       ) : (
@@ -271,7 +286,7 @@ function App() {
               </svg>
               <div className="header-title-container">
                 <span className="header-title">Novus Optra</span>
-                <span className="header-version">v0.1.3</span>
+                <span className="header-version">v{appVersion}</span>
               </div>
             </div>
 
