@@ -207,10 +207,7 @@ function App() {
       <div className="bg-gradient-orb orb-2"></div>
       <div className="bg-grid-overlay"></div>
       {/* hello */}
-      {/* Hello Prince */}
-      {/* Global Theme Controls */}
-      {/* Global Theme Controls */}
-      {/* Global Theme Controls */}
+
       <ThemeControls />
 
       {!isAuthenticated ? (
@@ -221,7 +218,7 @@ function App() {
 
           <form onSubmit={handleLogin} className="logon-form">
             <div className="logon-form-group">
-              <label className="logon-label">Operator Identification</label>
+              <label className="logon-label">Enter Your Email</label>
               <input
                 type="text"
                 className="neon-input logon-input"

@@ -50,7 +50,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDI1M0U5MzM2NEM2NUM4NTIKUldSU3lHVk1OcE0rSmVDTUMwVjN0c2pZU1lvOHlCOWZEU0hmc284UGJuaTZjdFBBSVpxRUxZRUQK",
       "endpoints": [
-        "https://github.com/PrinceTyagia/novus-optra/releases/latest/download/updater.json"
+        "https://github.com/PrinceTyagia/novus-optra/releases/latest/download/latest.json"
       ]
     }
   }
