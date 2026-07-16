@@ -4,79 +4,54 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag to build (e.g. v0.1.0)'
-        required: true
-        default: 'v0.1.0'
 
 jobs:
   release:
     permissions:
       contents: write
+
     strategy:
       fail-fast: false
       matrix:
         platform: [macos-latest, ubuntu-22.04, windows-latest]
+
     runs-on: ${{ matrix.platform }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22
 
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: dtolnay/rust-toolchain@stable
 
-      - name: Rust dependency cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: './src-tauri -> target'
+      - uses: swatinem/rust-cache@v2
 
-      - name: Install Linux system dependencies
+      - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             libwebkit2gtk-4.1-dev \
             build-essential \
-            curl \
-            wget \
-            file \
-            libxdo-dev \
-            libssl-dev \
+            curl wget file \
+            libxdo-dev libssl-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev
 
-      - name: Install frontend dependencies
-        run: npm install
+      - run: npm ci
 
-      - name: Build Tauri app and create release
+      - name: Build + Release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}
+          tagName: ${{ github.ref_name }}
           releaseName: 'Novus Optra v__VERSION__'
-          releaseBody: |
-            ## Novus Optra v__VERSION__
-
-            ### 📦 Download
-            - **Windows**: Download the `.msi` or `-setup.exe` installer below
-            - **macOS**: Download the `.dmg` file below
-            - **Linux**: Download the `.AppImage` or `.deb` file below
-
-            ### ⚙️ Auto-Update
-            Existing installations will update automatically on next launch.
+          releaseBody: 'Automatic release'
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
