@@ -218,7 +218,7 @@ function App() {
 
           <form onSubmit={handleLogin} className="logon-form">
             <div className="logon-form-group">
-              <label className="logon-label">Enter Your Email</label>
+              <label className="logon-label">Enter Your Email/user</label>
               <input
                 type="text"
                 className="neon-input logon-input"
