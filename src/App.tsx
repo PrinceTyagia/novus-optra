@@ -209,6 +209,8 @@ function App() {
       {/* hello */}
       {/* Hello Prince */}
       {/* Global Theme Controls */}
+      {/* Global Theme Controls */}
+      {/* Global Theme Controls */}
       <ThemeControls />
 
       {!isAuthenticated ? (
