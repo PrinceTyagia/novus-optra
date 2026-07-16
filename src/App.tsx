@@ -118,6 +118,7 @@ function App() {
             }
           });
           addLog("Update installed successfully. Relaunching system...");
+          await invoke("restart_app");
         } else {
           addLog("System integrity check complete. Version is up to date.");
         }
