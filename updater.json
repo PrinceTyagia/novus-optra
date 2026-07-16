@@ -1,23 +1,23 @@
 {
-  "version": "0.1.1",
-  "notes": "Bug fixes and improvements.",
+  "version": "0.1.0",
+  "notes": "Initial release of Novus Optra Terminal.",
   "pub_date": "2026-07-15T18:01:58Z",
   "platforms": {
     "windows-x86_64": {
       "signature": "PASTE_THE_CONTENT_OF_YOUR_MSI_SIG_FILE_HERE",
-      "url": "https://github.com/PrinceTyagia/novus-optra/releases/download/v0.1.1/Novus.Optra_0.1.0_x64_en-US.msi"
+      "url": "https://github.com/PrinceTyagia/novus-optra/releases/download/v0.1.0/Novus.Optra_0.1.0_x64_en-US.msi"
     },
     "darwin-x86_64": {
       "signature": "PASTE_THE_CONTENT_OF_YOUR_DMG_SIG_FILE_HERE",
-      "url": "https://github.com/PrinceTyagia/novus-optra/releases/download/v0.1.1/Novus.Optra.app.tar.gz"
+      "url": "https://github.com/PrinceTyagia/novus-optra/releases/download/v0.1.0/Novus.Optra.app.tar.gz"
     },
     "darwin-aarch64": {
       "signature": "PASTE_THE_CONTENT_OF_YOUR_MAC_AARCH64_SIG_FILE_HERE",
-      "url": "https://github.com/PrinceTyagia/novus-optra/releases/download/v0.1.1/Novus.Optra.app.tar.gz"
+      "url": "https://github.com/PrinceTyagia/novus-optra/releases/download/v0.1.0/Novus.Optra.app.tar.gz"
     },
     "linux-x86_64": {
       "signature": "PASTE_THE_CONTENT_OF_YOUR_APPIMAGE_SIG_FILE_HERE",
-      "url": "https://github.com/PrinceTyagia/novus-optra/releases/download/v0.1.1/Novus.Optra.AppImage.tar.gz"
+      "url": "https://github.com/PrinceTyagia/novus-optra/releases/download/v0.1.0/Novus.Optra.AppImage.tar.gz"
     }
   }
 }
