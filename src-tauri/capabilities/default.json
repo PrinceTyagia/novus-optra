@@ -7,6 +7,9 @@
     "core:default",
     "core:app:default",
     "opener:default",
-    "updater:default"
+    "updater:default",
+    "sql:default",
+    "sql:allow-execute",
+    "sql:allow-select"
   ]
 }
